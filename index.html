@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elektronikai Bolt</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/davidshimjs/qrcodejs/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header .user-info {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .wallet {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .wallet h3 {
+            margin-bottom: 15px;
+            color: var(--tg-theme-text-color, #333);
+        }
+        
+        .balance {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .balance-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 12px;
+        }
+        
+        .products {
+            margin-bottom: 25px;
+        }
+        
+        .products h3 {
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #333);
+        }
+        
+        .product {
+            background: var(--tg-theme-secondary-bg-color, #ffffff);
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .product-name {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .product-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .product-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            margin: 15% auto;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 350px;
+            text-align: center;
+        }
+        
+        .modal-content h3 {
+            margin-bottom: 20px;
+            color: var(--tg-theme-text-color, #333);
+        }
+        
+        .crypto-address {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            word-break: break-all;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+        
+        .qr-container {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: -15px;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .transactions {
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        
+        .transaction-type {
+            font-weight: 600;
+        }
+        
+        .transaction-amount {
+            font-weight: bold;
+        }
+        
+        .amount-positive {
+            color: #28a745;
+        }
+        
+        .amount-negative {
+            color: #dc3545;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
+            border-radius: 10px;
+            padding: 5px;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: #007bff;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Elektronikai Bolt</h1>
+            <div class="user-info" id="userInfo">Üdvözöljük!</div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('shop')">🛒 Bolt</div>
+            <div class="tab" onclick="switchTab('wallet')">💰 Pénztárca</div>
+            <div class="tab" onclick="switchTab('orders')">📦 Rendelések</div>
+        </div>
+        
+        <!-- Shop Tab -->
+        <div class="tab-content active" id="shop">
+            <div class="wallet">
+                <div class="balance">
+                    <span>Egyenleg:</span>
+                    <span class="balance-amount" id="balance">0 USDT</span>
+                </div>
+                <button class="btn btn-primary" onclick="showDepositModal()">💳 Feltöltés</button>
+            </div>
+            
+            <div class="products">
+                <h3>📱 Termékek</h3>
+                
+                <div class="product">
+                    <div class="product-header">
+                        <div class="product-name">Arduino Uno R3</div>
+                        <div class="product-price">25 USDT</div>
+                    </div>
+                    <div class="product-description">
+                        Mikrokapcsoló fejlesztőkártya kezdőknek. USB kábellel és dokumentációval.
+                    </div>
+                    <button class="btn btn-success" onclick="buyProduct('Arduino Uno R3', 25)">Vásárlás</button>
+                </div>
+                
+                <div class="product">
+                    <div class="product-header">
+                        <div class="product-name">Raspberry Pi 4</div>
+                        <div class="product-price">85 USDT</div>
+                    </div>
+                    <div class="product-description">
+                        4GB RAM, Quad-core ARM processzor. Ideális IoT projektekhez.
+                    </div>
+                    <button class="btn btn-success" onclick="buyProduct('Raspberry Pi 4', 85)">Vásárlás</button>
+                </div>
+                
+                <div class="product">
+                    <div class="product-header">
+                        <div class="product-name">ESP32 DevKit</div>
+                        <div class="product-price">15 USDT</div>
+                    </div>
+                    <div class="product-description">
+                        WiFi és Bluetooth támogatással. Tökéletes IoT alkalmazásokhoz.
+                    </div>
+                    <button class="btn btn-success" onclick="buyProduct('ESP32 DevKit', 15)">Vásárlás</button>
+                </div>
+                
+                <div class="product">
+                    <div class="product-header">
+                        <div class="product-name">Szervó motor SG90</div>
+                        <div class="product-price">8 USDT</div>
+                    </div>
+                    <div class="product-description">
+                        Precíz pozicionálásra alkalmas kis szervómotor robotikához.
+                    </div>
+                    <button class="btn btn-success" onclick="buyProduct('Szervó motor SG90', 8)">Vásárlás</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Wallet Tab -->
+        <div class="tab-content" id="wallet">
+            <div class="wallet">
+                <h3>💰 Pénztárca</h3>
+                <div class="balance">
+                    <span>Jelenlegi egyenleg:</span>
+                    <span class="balance-amount" id="walletBalance">0 USDT</span>
+                </div>
+                <button class="btn btn-primary" onclick="showDepositModal()">Feltöltés</button>
+                <button class="btn btn-danger btn-small" onclick="simulateDeposit()" style="margin-left: 10px;">🧪 Test feltöltés</button>
+            </div>
+            
+            <div class="transactions">
+                <h3>📋 Tranzakciók</h3>
+                <div id="transactionsList">
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        Még nincsenek tranzakciók
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Orders Tab -->
+        <div class="tab-content" id="orders">
+            <div class="transactions">
+                <h3>📦 Rendeléseim</h3>
+                <div id="ordersList">
+                    <div style="text-align: center; color: #666; padding: 20px;">
+                        Még nincsenek rendelések
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Deposit Modal -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeDepositModal()">&times;</span>
+            <h3>💳 Krypto feltöltés</h3>
+            <p>Küldd el a USDT-t az alábbi címre:</p>
+            <div class="crypto-address" id="cryptoAddress">
+                TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE
+            </div>
+            <div class="qr-container">
+                <div id="qrcode"></div>
+            </div>
+            <p style="font-size: 12px; color: #666;">
+                A beérkezést automatikusan érzékeljük és feltöltjük a pénztárcádba.
+            </p>
+            <button class="btn btn-primary" onclick="closeDepositModal()">Rendben</button>
+        </div>
+    </div>
+    
+    <script>
+        let tg = window.Telegram.WebApp;
+        let user = null;
+        
+        // App inicializálás
+        function initApp() {
+            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                user = tg.initDataUnsafe.user;
+                document.getElementById('userInfo').innerText = `Szia ${user.first_name}! 👋`;
+            } else {
+                // Teszt felhasználó fejlesztéshez
+                user = { id: 123456, first_name: 'Test' };
+                document.getElementById('userInfo').innerText = `Teszt mód 🧪`;
+            }
+            
+            updateBalance();
+            loadTransactions();
+            loadOrders();
+            
+            // Telegram WebApp beállítások
+            tg.ready();
+            tg.expand();
+        }
+        
+        // Tab váltás
+        function switchTab(tabName) {
+            // Tab gombok
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Tab tartalmak
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName).classList.add('active');
+            
+            updateBalance();
+        }
+        
+        // Egyenleg kezelés
+        function getBalance() {
+            return parseFloat(localStorage.getItem(`balance_${user.id}`) || 0);
+        }
+        
+        function setBalance(amount) {
+            localStorage.setItem(`balance_${user.id}`, amount.toFixed(2));
+            updateBalance();
+        }
+        
+        function updateBalance() {
+            const balance = getBalance();
+            document.getElementById('balance').innerText = `${balance} USDT`;
+            document.getElementById('walletBalance').innerText = `${balance} USDT`;
+        }
+        
+        // Termék vásárlás
+        function buyProduct(productName, price) {
+            const currentBalance = getBalance();
+            
+            if (currentBalance >= price) {
+                setBalance(currentBalance - price);
+                addTransaction(`Vásárlás: ${productName}`, -price, 'purchase');
+                addOrder(productName, price);
+                
+                if (tg.showAlert) {
+                    tg.showAlert(`✅ ${productName} sikeresen megvásárolva!`);
+                } else {
+                    alert(`✅ ${productName} sikeresen megvásárolva!`);
+                }
+            } else {
+                if (tg.showAlert) {
+                    tg.showAlert(`❌ Nincs elég egyenleged! Szükséges: ${price} USDT`);
+                } else {
+                    alert(`❌ Nincs elég egyenleged! Szükséges: ${price} USDT`);
+                }
+            }
+        }
+        
+        // Deposit modal
+        function showDepositModal() {
+            document.getElementById('depositModal').style.display = 'block';
+            
+            // QR kód generálása
+            document.getElementById('qrcode').innerHTML = '';
+            new QRCode(document.getElementById("qrcode"), {
+                text: "TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE",
+                width: 150,
+                height: 150
+            });
+        }
+        
+        function closeDepositModal() {
+            document.getElementById('depositModal').style.display = 'none';
+        }
+        
+        // Teszt feltöltés (fejlesztéshez)
+        function simulateDeposit() {
+            const amount = Math.floor(Math.random() * 100) + 10;
+            setBalance(getBalance() + amount);
+            addTransaction(`Teszt feltöltés`, amount, 'deposit');
+            
+            if (tg.showAlert) {
+                tg.showAlert(`✅ ${amount} USDT feltöltve!`);
+            } else {
+                alert(`✅ ${amount} USDT feltöltve!`);
+            }
+        }
+        
+        // Tranzakciók kezelése
+        function addTransaction(description, amount, type) {
+            const transactions = getTransactions();
+            const transaction = {
+                id: Date.now(),
+                description: description,
+                amount: amount,
+                type: type,
+                date: new Date().toLocaleString('hu-HU')
+            };
+            
+            transactions.unshift(transaction);
+            localStorage.setItem(`transactions_${user.id}`, JSON.stringify(transactions));
+            loadTransactions();
+        }
+        
+        function getTransactions() {
+            return JSON.parse(localStorage.getItem(`transactions_${user.id}`) || '[]');
+        }
+        
+        function loadTransactions() {
+            const transactions = getTransactions();
+            const container = document.getElementById('transactionsList');
+            
+            if (transactions.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Még nincsenek tranzakciók</div>';
+                return;
+            }
+            
+            container.innerHTML = transactions.map(t => `
+                <div class="transaction-item">
+                    <div>
+                        <div class="transaction-type">${t.description}</div>
+                        <div style="font-size: 12px; color: #666;">${t.date}</div>
+                    </div>
+                    <div class="transaction-amount ${t.amount > 0 ? 'amount-positive' : 'amount-negative'}">
+                        ${t.amount > 0 ? '+' : ''}${t.amount} USDT
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Rendelések kezelése
+        function addOrder(productName, price) {
+            const orders = getOrders();
+            const order = {
+                id: Date.now(),
+                product: productName,
+                price: price,
+                status: 'Feldolgozás alatt',
+                date: new Date().toLocaleString('hu-HU')
+            };
+            
+            orders.unshift(order);
+            localStorage.setItem(`orders_${user.id}`, JSON.stringify(orders));
+            loadOrders();
+        }
+        
+        function getOrders() {
+            return JSON.parse(localStorage.getItem(`orders_${user.id}`) || '[]');
+        }
+        
+        function loadOrders() {
+            const orders = getOrders();
+            const container = document.getElementById('ordersList');
+            
+            if (orders.length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Még nincsenek rendelések</div>';
+                return;
+            }
+            
+            container.innerHTML = orders.map(o => `
+                <div class="transaction-item">
+                    <div>
+                        <div class="transaction-type">${o.product}</div>
+                        <div style="font-size: 12px; color: #666;">
+                            ${o.date} • ${o.status}
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        ${o.price} USDT
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Modal bezárás klikk esetén
+        window.onclick = function(event) {
+            const modal = document.getElementById('depositModal');
+            if (event.target == modal) {
+                closeDepositModal();
+            }
+        }
+        
+        // App indítása
+        initApp();
+    </script>
+</body>
+</html>
